@@ -1,5 +1,5 @@
 // ============ GOOGLE SHEETS INTEGRATION ============
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2BhJfwxndUNMtWYRA8r00VDzhALhWy4LcXp42gm-oF1OTQEPsT_8vmcimPPGs4sBb/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFwhOZnn1FAvaYn5Uv8oB66vRyYUyHVv_5VQz3a9pP49zs3VAG9Pb3vvBQURj7St0VXw/exec';
 
 // تهيئة التطبيق
 class TechServiceApp {
@@ -630,41 +630,40 @@ class TechServiceApp {
     }
     
     // إرسال البيانات إلى Google Sheets
-   async sendToGoogleSheets(formData) {
-    const dataToSend = {
-        apiKey: 'FALCO_SECURE_2026',
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-        service: formData.service,
-        device: formData.device,
-        problem: formData.problem,
-        date: formData.date,
-        priority: formData.priority,
-        timestamp: formData.timestamp
-    };
-
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(dataToSend)
-        });
-
-        const result = await response.json(); // 🔥 هنا الفرق
-
-        return {
-            success: result.status === "success",
-            orderNumber: 'TS' + Date.now().toString().slice(-8) + Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+    async sendToGoogleSheets(formData) {
+        const dataToSend = {
+            apiKey: 'FALCO_SECURE_2026', // 🔐 مهم
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email,
+            service: formData.service,
+            device: formData.device,
+            problem: formData.problem,
+            date: formData.date,
+            priority: formData.priority,
+            timestamp: formData.timestamp
         };
-
-    } catch (error) {
-        console.error('Google Sheets Error:', error);
-        throw error;
+        
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dataToSend)
+            });
+            
+            return {
+                success: true,
+                orderNumber: 'TS' + Date.now().toString().slice(-8) + Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+            };
+            
+        } catch (error) {
+            // بديل باستخدام JSONP للتوافق مع CORS
+            return await this.sendViaJSONP(dataToSend);
+        }
     }
-}
     
     // طريقة بديلة باستخدام JSONP
     sendViaJSONP(data) {
