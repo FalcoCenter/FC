@@ -1770,3 +1770,27 @@ async function sendToGoogleSheets(data) {
         body: JSON.stringify(data)
     });
 }
+function trackOrder() {
+    const orderNumber = document.getElementById("trackOrderInput").value;
+
+    if (!orderNumber) {
+        alert("اكتب رقم الطلب الأول");
+        return;
+    }
+
+    fetch(GOOGLE_SCRIPT_URL + "?action=getOrder&orderNumber=" + orderNumber)
+        .then(res => res.json())
+        .then(data => {
+            if (data.found) {
+                document.getElementById("orderStatusResult").innerText =
+                    "حالة الطلب: " + data.status;
+            } else {
+                document.getElementById("orderStatusResult").innerText =
+                    "❌ الطلب غير موجود";
+            }
+        })
+        .catch(() => {
+            document.getElementById("orderStatusResult").innerText =
+                "⚠️ حصل خطأ";
+        });
+}
