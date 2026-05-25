@@ -1,5 +1,5 @@
 // ============ GOOGLE SHEETS INTEGRATION ============
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAgfTyZcPE5XpuQIzk8eJHpaPzTnjKIm7Vkn279EbO23GmckZSVNzlJDdOe4CzHpP1/exec';
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylyVLnR-L8YLjj8lwWRgtgZJqXnUzqOYMS-C-CgHoU_Vv7JMwoRabVqb8H2GikyJEI/exec";
 
 // تهيئة التطبيق
 class TechServiceApp {
@@ -1769,4 +1769,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     console.log('🚀 مركز الصقر جاهز للعمل!');
+    
 });
+async function sendToGoogleSheets(data) {
+    await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(data)
+    });
+}
