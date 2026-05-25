@@ -1770,27 +1770,3 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('🚀 مركز الصقر جاهز للعمل!');
 });
-async function sendToGoogleSheets(data) {
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors', // مهم جدا
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        return true;
-    } catch (error) {
-        console.error('Error:', error);
-        return false;
-    }
-}
-async function sendToGoogleSheets(data) {
-    await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify(data)
-    });
-}
