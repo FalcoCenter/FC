@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجري | منتجات من Google Sheets</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        body { background: #f8fafc; }
+        .top-bar {
+            background: white; padding: 16px 24px; display: flex; justify-content: space-between;
+            align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,0.05); position: sticky; top:0; z-index:99;
+        }
+        .logo h2 { font-size: 1.8rem; background: linear-gradient(135deg, #1e3c72, #2a5298); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .cart-btn { background: #1e3c72; color: white; border: none; padding: 8px 20px; border-radius: 40px; font-weight: 600; cursor: pointer; display: flex; gap: 8px; }
+        .cart-count { background: #f97316; border-radius: 50%; width: 26px; display: inline-flex; align-items: center; justify-content: center; }
+        .container { max-width: 1300px; margin: 40px auto; padding: 0 24px; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        .product-card { background: white; border-radius: 28px; overflow: hidden; box-shadow: 0 12px 24px -12px rgba(0,0,0,0.1); transition: 0.2s; }
+        .product-card:hover { transform: translateY(-5px); }
+        .product-img { width: 100%; height: 220px; object-fit: cover; background: #eef2ff; }
+        .product-info { padding: 18px; }
+        .product-name { font-weight: 800; font-size: 1.2rem; }
+        .product-price { color: #2a5298; font-weight: 800; font-size: 1.3rem; margin: 10px 0; }
+        .add-to-cart { background: #1e293b; color: white; border: none; width: 100%; padding: 12px; border-radius: 44px; font-weight: 600; cursor: pointer; }
+        /* السلة الجانبية */
+        .cart-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:1000; display:none; }
+        .side-cart { position: fixed; top:0; left:-420px; max-width: 400px; width:100%; height:100%; background:white; z-index:1001; transition:0.3s; padding:24px; display:flex; flex-direction:column; overflow-y:auto; }
+        .side-cart.open { left:0; }
+        .cart-header { display:flex; justify-content: space-between; border-bottom:2px solid #e2e8f0; padding-bottom:12px; font-weight:bold; font-size:1.3rem; }
+        .cart-item { display:flex; justify-content: space-between; padding:12px 0; border-bottom:1px solid #f1f5f9; align-items:center; }
+        .qty-btn { background:#eef2ff; border:none; width:28px; height:28px; border-radius:30px; cursor:pointer; }
+        .cart-total { margin-top:20px; border-top:2px dashed #cbd5e1; padding-top:15px; display:flex; justify-content: space-between; font-weight:800; font-size:1.2rem; }
+        .checkout-btn { background:#2a5298; color:white; border:none; padding:12px; border-radius:48px; margin-top:20px; font-weight:bold; cursor:pointer; }
+        footer { text-align:center; padding:30px; background:white; margin-top:60px; color:#5b6e8c; }
+        @media (max-width:650px) { .products-grid { gap:16px; } }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="logo"><h2>✨ متجري</h2></div>
+    <button class="cart-btn" id="openCartBtn">🛒 السلة <span class="cart-count" id="cartCount">0</span></button>
+</div>
+<div class="container">
+    <div class="products-grid" id="productsGrid">
+        <div style="text-align:center; padding:50px;">جاري تحميل المنتجات...</div>
+    </div>
+</div>
+<footer>🚀 جميع المنتجات تُجلب مباشرة من Google Sheets | الطلبات تُسجل تلقائياً</footer>
+
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="side-cart" id="sideCart">
+    <div class="cart-header">سلة المشتريات <button class="close-cart" id="closeCartBtn" style="background:none; border:none; font-size:28px;">&times;</button></div>
+    <div id="cartItemsList" style="flex:1;"></div>
+    <div class="cart-total"><span>الإجمالي:</span> <span id="cartTotalPrice">0</span> ج.م</div>
+    <button class="checkout-btn" id="checkoutAction">إتمام الطلب</button>
+</div>
+
+<script>
+    // ------------------- إعدادات الاتصال -------------------
+    const API_URL = "YOUR_GOOGLE_SCRIPT_URL";  // ضع هنا رابط Web App الخاص بك
+    let products = [];
+    let cart = JSON.parse(localStorage.getItem("dynamic_cart")) || [];
+
+    // جلب المنتجات من Google Sheets
+    async function fetchProducts() {
+        try {
+            const res = await fetch(API_URL);
+            if (!res.ok) throw new Error("فشل الجلب");
+            products = await res.json();
+            renderProducts();
+        } catch(err) {
+            document.getElementById("productsGrid").innerHTML = `<div style="color:red;">❌ فشل تحميل المنتجات. تأكد من نشر الـ Web App بشكل صحيح.</div>`;
+            console.error(err);
+        }
+    }
+
+    function renderProducts() {
+        const grid = document.getElementById("productsGrid");
+        if (!products.length) {
+            grid.innerHTML = "<div>لا توجد منتجات حالياً</div>";
+            return;
+        }
+        grid.innerHTML = products.map(prod => `
+            <div class="product-card">
+                <img class="product-img" src="${prod.image}" alt="${prod.name}" loading="lazy" onerror="this.src='https://picsum.photos/id/13/400/300'">
+                <div class="product-info">
+                    <div class="product-name">${prod.name}</div>
+                    <div class="product-price">${Number(prod.price).toLocaleString()} ج.م</div>
+                    <button class="add-to-cart" data-id="${prod.id}">➕ أضف للسلة</button>
+                </div>
+            </div>
+        `).join("");
+        document.querySelectorAll(".add-to-cart").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const id = btn.getAttribute("data-id");
+                const product = products.find(p => p.id == id);
+                if(product) addToCart(product);
+            });
+        });
+    }
+
+    function addToCart(product) {
+        const existing = cart.find(i => i.id === product.id);
+        if(existing) existing.quantity += 1;
+        else cart.push({ ...product, quantity: 1 });
+        saveCartAndUpdateUI();
+    }
+
+    function changeQuantity(id, delta) {
+        const item = cart.find(i => i.id === id);
+        if(item) {
+            item.quantity += delta;
+            if(item.quantity <= 0) cart = cart.filter(i => i.id !== id);
+            saveCartAndUpdateUI();
+        }
+    }
+
+    function removeItem(id) {
+        cart = cart.filter(i => i.id !== id);
+        saveCartAndUpdateUI();
+    }
+
+    function saveCartAndUpdateUI() {
+        localStorage.setItem("dynamic_cart", JSON.stringify(cart));
+        updateCartUI();
+        updateCartCounter();
+    }
+
+    function updateCartCounter() {
+        const totalItems = cart.reduce((sum,i) => sum + i.quantity, 0);
+        document.getElementById("cartCount").innerText = totalItems;
+    }
+
+    function updateCartUI() {
+        const container = document.getElementById("cartItemsList");
+        const totalSpan = document.getElementById("cartTotalPrice");
+        if(!container) return;
+        if(cart.length === 0) {
+            container.innerHTML = "<div style='text-align:center;padding:30px;'>🛍️ السلة فارغة</div>";
+            totalSpan.innerText = "0";
+            return;
+        }
+        let total = 0;
+        container.innerHTML = cart.map(item => {
+            const itemTotal = item.price * item.quantity;
+            total += itemTotal;
+            return `
+                <div class="cart-item">
+                    <div><strong>${item.name}</strong><br><small>${item.price} ج.م × ${item.quantity}</small></div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="qty-btn" data-id="${item.id}" data-delta="-1">-</button>
+                        <span>${item.quantity}</span>
+                        <button class="qty-btn" data-id="${item.id}" data-delta="1">+</button>
+                        <button class="qty-btn" data-id="${item.id}" data-remove="true" style="background:#fee2e2;">🗑</button>
+                    </div>
+                </div>
+            `;
+        }).join("");
+        totalSpan.innerText = total.toLocaleString();
+
+        document.querySelectorAll(".qty-btn[data-delta]").forEach(btn => {
+            btn.onclick = () => changeQuantity(btn.getAttribute("data-id"), parseInt(btn.getAttribute("data-delta")));
+        });
+        document.querySelectorAll(".qty-btn[data-remove]").forEach(btn => {
+            btn.onclick = () => removeItem(btn.getAttribute("data-id"));
+        });
+    }
+
+    // إرسال الطلب
+    async function submitOrder(orderData) {
+        try {
+            await fetch(API_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(orderData)
+            });
+            return true;
+        } catch(e) { return false; }
+    }
+
+    function handleCheckout() {
+        if(cart.length === 0) return alert("السلة فارغة");
+        const name = prompt("👤 اسمك الكامل:");
+        if(!name) return;
+        const phone = prompt("📞 رقم الهاتف:");
+        if(!phone) return;
+        const itemsForSheet = cart.map(i => ({ id:i.id, name:i.name, price:i.price, qty:i.quantity }));
+        const totalSum = cart.reduce((s,i) => s + (i.price * i.quantity), 0);
+        const payload = {
+            timestamp: new Date().toISOString(),
+            customer: name,
+            phone: phone,
+            items: itemsForSheet,
+            total: totalSum
+        };
+        submitOrder(payload).then(() => {
+            alert(`✅ تم إرسال طلبك بنجاح ${name}`);
+            cart = [];
+            saveCartAndUpdateUI();
+            closeCart();
+        });
+    }
+
+    // فتح وإغلاق السلة
+    function openCart() { document.getElementById("sideCart").classList.add("open"); document.getElementById("cartOverlay").style.display = "block"; updateCartUI(); }
+    function closeCart() { document.getElementById("sideCart").classList.remove("open"); document.getElementById("cartOverlay").style.display = "none"; }
+    document.getElementById("openCartBtn").onclick = openCart;
+    document.getElementById("closeCartBtn").onclick = closeCart;
+    document.getElementById("cartOverlay").onclick = closeCart;
+    document.getElementById("checkoutAction").onclick = handleCheckout;
+
+    // بدء التشغيل
+    fetchProducts();
+    updateCartCounter();
+    updateCartUI();
+</script>
+</body>
+</html>
