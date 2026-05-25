@@ -1,5 +1,5 @@
 // ============ GOOGLE SHEETS INTEGRATION ============
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFwhOZnn1FAvaYn5Uv8oB66vRyYUyHVv_5VQz3a9pP49zs3VAG9Pb3vvBQURj7St0VXw/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAgfTyZcPE5XpuQIzk8eJHpaPzTnjKIm7Vkn279EbO23GmckZSVNzlJDdOe4CzHpP1/exec';
 
 // تهيئة التطبيق
 class TechServiceApp {
