@@ -630,40 +630,41 @@ class TechServiceApp {
     }
     
     // إرسال البيانات إلى Google Sheets
-    async sendToGoogleSheets(formData) {
-        const dataToSend = {
-            apiKey: 'FALCO_SECURE_2026', // 🔐 مهم
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email,
-            service: formData.service,
-            device: formData.device,
-            problem: formData.problem,
-            date: formData.date,
-            priority: formData.priority,
-            timestamp: formData.timestamp
+   async sendToGoogleSheets(formData) {
+    const dataToSend = {
+        apiKey: 'FALCO_SECURE_2026',
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        service: formData.service,
+        device: formData.device,
+        problem: formData.problem,
+        date: formData.date,
+        priority: formData.priority,
+        timestamp: formData.timestamp
+    };
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataToSend)
+        });
+
+        const result = await response.json(); // 🔥 هنا الفرق
+
+        return {
+            success: result.status === "success",
+            orderNumber: 'TS' + Date.now().toString().slice(-8) + Math.floor(Math.random() * 1000).toString().padStart(3, '0')
         };
-        
-        try {
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(dataToSend)
-            });
-            
-            return {
-                success: true,
-                orderNumber: 'TS' + Date.now().toString().slice(-8) + Math.floor(Math.random() * 1000).toString().padStart(3, '0')
-            };
-            
-        } catch (error) {
-            // بديل باستخدام JSONP للتوافق مع CORS
-            return await this.sendViaJSONP(dataToSend);
-        }
+
+    } catch (error) {
+        console.error('Google Sheets Error:', error);
+        throw error;
     }
+}
     
     // طريقة بديلة باستخدام JSONP
     sendViaJSONP(data) {
