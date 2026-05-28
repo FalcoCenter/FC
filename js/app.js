@@ -53,12 +53,25 @@ class TechServiceApp {
 
     // ================= SEND =================
     async sendToGoogleSheets(data) {
-        return fetch(GOOGLE_SCRIPT_URL, {
+    try {
+        const res = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors", // مهم علشان CORS
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify(data)
         });
+
+        const result = await res.text(); // مهم
+        console.log("Response:", result);
+
+        return true;
+
+    } catch (error) {
+        console.error("Error:", error);
+        return false;
     }
+}
 
     // ================= FORM =================
     collectFormData() {
