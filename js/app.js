@@ -63,15 +63,22 @@ class TechServiceApp {
 
     // ================= FORM =================
     collectFormData() {
-        return {
-            name: document.getElementById("name").value.trim(),
-            phone: document.getElementById("phone").value.trim(),
-            email: document.getElementById("email").value.trim(),
-            service: document.getElementById("service").value,
-            device: document.getElementById("device").value.trim(),
-            problem: document.getElementById("problem").value.trim()
-        };
+    let phone = document.getElementById("phone").value.trim();
+
+    // إصلاح الرقم لو ناقص 0
+    if (!phone.startsWith("0")) {
+        phone = "0" + phone;
     }
+
+    return {
+        name: document.getElementById("name").value.trim(),
+        phone: phone,
+        email: document.getElementById("email").value.trim(),
+        service: document.getElementById("service").value,
+        device: document.getElementById("device").value.trim(),
+        problem: document.getElementById("problem").value.trim()
+    };
+}
 
     validateForm() {
         const name = document.getElementById("name").value.trim();
