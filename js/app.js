@@ -1,5 +1,5 @@
 // ================= CONFIG =================
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyerhrN3qtG8QjNif6YDBjEacNMxTe76Dd0oSuD8fHaS8Dm8G3mH1zZZs-if9rhmwiDVw/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDhDuGgA43lCnD1Bmd405Qf-bdO_KSOGh8zfiR-iAWQmERqyX0HQWH8A0WrwQpgJG9/exec";
 // ================= APP =================
 class TechServiceApp {
     constructor() {
