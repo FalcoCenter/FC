@@ -1,6 +1,5 @@
 // ============ GOOGLE SHEETS INTEGRATION ============
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxA7xksTRY3E6KNPz0hRqIBSdo2btDY6cQnwmW6YK3focI0UK-KVU5UJyDmQGOgP1VR/exec
-";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxA7xksTRY3E6KNPz0hRqIBSdo2btDY6cQnwmW6YK3focI0UK-KVU5UJyDmQGOgP1VR/exec";
 
 // تهيئة التطبيق
 class TechServiceApp {
@@ -696,7 +695,6 @@ class TechServiceApp {
             document.body.appendChild(script);
         });
     }
-    
     // إرسال بريد تأكيد
     async sendEmailConfirmation(formData, orderNumber) {
         if (!formData.email) return;
