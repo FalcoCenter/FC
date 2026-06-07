@@ -1,6 +1,5 @@
-// ================= CONFIG =================
+2 // ================= CONFIG =================
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxUowH6xWOY6o0cHl3Saq4sUqsiC0AzbI1xsalE3HqNoZeyklF3tYItPCIPGJCbWsx-g/exec";
-
 // ================= APP =================
 class TechServiceApp {
     constructor() {
@@ -41,64 +40,44 @@ class TechServiceApp {
             console.error(err);
             const orderNumber = "ORD-" + Date.now();
             this.saveOrder(data, orderNumber);
-            this.saveOffline(data);
             this.showError("تم حفظ الطلب محلياً بسبب مشكلة في الاتصال. سيتم إرساله تلقائياً عند عودة الإنترنت");
         }
         this.showLoading(false);
     }
 
-    // ================= SEND TO GOOGLE SHEETS =================
+    // ================= SEND TO GOOGLE SHEETS (متوافق مع السكربت) =================
     async sendToGoogleSheets(data) {
-        try {
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            });
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",  // مهم للتجاوز مشاكل CORS
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
 
-            console.log("✅ تم إرسال البيانات بنجاح", data);
-            return { success: true, orderNumber: this.generateOrderNumber() };
+        // بما أننا استخدمنا no-cors، لا يمكن قراءة الرد مباشرة
+        // سنفترض أن العملية نجحت
+        console.log("✅ تم إرسال البيانات بنجاح", data);
+        return { success: true, orderNumber: this.generateOrderNumber() };
 
-        } catch (error) {
-            console.error("❌ Error sending to Google Sheets:", error);
-            throw error;
-        }
+    } catch (error) {
+        console.error("❌ Error sending to Google Sheets:", error);
+        throw error;
     }
-
+}
     // ================= توليد رقم طلب مؤقت =================
-    generateOrderNumber() {
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-        return `SRV-${year}${month}${day}-${random}`;
-    }
-
-    // ================= COLLECT FORM DATA =================
-    collectFormData() {
-        let phone = document.getElementById("phone")?.value.trim() || "";
-        
-        // إصلاح الرقم لو ناقص 0
-        if (phone && !phone.startsWith("0") && phone.length === 10) {
-            phone = "0" + phone;
-        }
-
-        return {
-            name: document.getElementById("name")?.value.trim() || "",
-            phone: phone,
-            email: document.getElementById("email")?.value.trim() || "",
-            service: document.getElementById("service")?.value || "",
-            device: document.getElementById("device")?.value.trim() || "",
-            problem: document.getElementById("problem")?.value.trim() || "",
-            date: document.getElementById("date")?.value || "",
-            priority: document.getElementById("priority")?.value || "normal",
-            status: "قيد المراجعة"
-        };
-    }
+generateOrderNumber() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `SRV-${year}${month}${day}-${random}`;
+}
+    // ================= COLLECT FORM DATA (جميع الحقول المطلوبة) =================
+collectFormData() {
 
     // ================= VALIDATION =================
     validateForm() {
@@ -134,10 +113,12 @@ class TechServiceApp {
     validateEgyptianPhone(phone) {
         if (!phone) return false;
         
+        // تنظيف الرقم
         let cleaned = phone.toString().trim()
             .replace(/[\s\-+()]/g, '')
             .replace(/[٠١٢٣٤٥٦٧٨٩]/g, d => String.fromCharCode(d.charCodeAt(0) - 1632));
         
+        // تحويل التنسيقات الدولية
         if (cleaned.startsWith('002')) {
             cleaned = '0' + cleaned.substring(3);
         } else if (cleaned.startsWith('+2')) {
@@ -146,8 +127,9 @@ class TechServiceApp {
             cleaned = '0' + cleaned;
         }
         
-        const mobileRegex = /^01[0125][0-9]{8}$/;
-        const landlineRegex = /^0[2-9][0-9]{7,8}$/;
+        // التحقق من صيغة الأرقام المصرية
+        const mobileRegex = /^01[0125][0-9]{8}$/;     // موبايل: 010, 011, 012, 015
+        const landlineRegex = /^0[2-9][0-9]{7,8}$/;   // أرضي
         
         return mobileRegex.test(cleaned) || landlineRegex.test(cleaned);
     }
@@ -163,6 +145,7 @@ class TechServiceApp {
 
         this.state.orders.unshift(order);
         
+        // الاحتفاظ بآخر 50 طلب فقط
         if (this.state.orders.length > 50) {
             this.state.orders = this.state.orders.slice(0, 50);
         }
@@ -245,7 +228,7 @@ class TechServiceApp {
                 if (response && response.success) {
                     offline.splice(i, 1);
                     i--;
-                    console.log(`✅ تم مزامنة طلب`);
+                    console.log(`✅ تم مزامنة طلب ${i + 1}`);
                 }
             } catch (err) {
                 console.error("فشل مزامنة طلب:", err);
@@ -258,58 +241,13 @@ class TechServiceApp {
             console.log("✅ تمت مزامنة جميع الطلبات");
         }
     }
-
-    // ================= TRACK ORDER =================
-    async trackOrder(orderNumber) {
-        if (!orderNumber) {
-            this.showError("الرجاء إدخال رقم الطلب");
-            return;
-        }
-
-        try {
-            const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getOrder&orderNumber=${encodeURIComponent(orderNumber)}`);
-            const result = await response.json();
-            
-            const statusDiv = document.getElementById("orderStatusResult");
-            if (result.success && result.order) {
-                statusDiv.innerHTML = `
-                    <div style="background: #e8f5e9; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
-                        <strong>✅ تم العثور على الطلب</strong><br>
-                        رقم الطلب: ${result.order.orderNumber}<br>
-                        الحالة: ${result.order.status}<br>
-                        تاريخ الطلب: ${new Date(result.order.date).toLocaleDateString('ar-EG')}
-                    </div>
-                `;
-            } else {
-                statusDiv.innerHTML = `
-                    <div style="background: #ffebee; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; color: #c62828;">
-                        ❌ ${result.error || "لم يتم العثور على الطلب"}
-                    </div>
-                `;
-            }
-        } catch (error) {
-            console.error("خطأ في متابعة الطلب:", error);
-            document.getElementById("orderStatusResult").innerHTML = `
-                <div style="background: #ffebee; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; color: #c62828;">
-                    ❌ حدث خطأ في الاتصال بالخادم
-                </div>
-            `;
-        }
-    }
-}
-
-// ================= دالة عامة لمتابعة الطلب =================
-function trackOrder() {
-    const orderNumber = document.getElementById("trackOrderInput")?.value.trim();
-    if (window.app) {
-        window.app.trackOrder(orderNumber);
-    }
 }
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
     window.app = new TechServiceApp();
 
+    // إعادة المحاولة عند رجوع الإنترنت
     window.addEventListener("online", () => {
         console.log("🔄 الاتصال عاد، جاري مزامنة الطلبات...");
         window.app.syncOffline();
