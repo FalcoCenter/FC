@@ -417,11 +417,19 @@
                             <option value="emergency">طارئة (4-12 ساعة) + 50%</option>
                         </select>
                     </div>
-                    
+                    <!-- Order Follow Up -->
                     <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 2rem;">
                         إرسال طلب الحجز
                     </button>
-                    
+                    <div style="margin-top:20px; text-align:center;">
+    <h3>متابعة الطلب</h3>
+
+    <input type="text" id="trackOrderInput" placeholder="ادخل رقم الطلب">
+
+    <button onclick="trackOrder()">متابعة الطلب</button>
+
+    <p id="orderStatusResult"></p>
+</div>
                     <!-- أزرار الإدارة -->
                    <!-- <div style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
                         <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
